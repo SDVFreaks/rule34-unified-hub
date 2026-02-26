@@ -1,0 +1,8 @@
+Tối ưu cho scale và user experience:
+
+- Video: Luôn dùng HLS adaptive streaming (FFmpeg để generate segments), không serve raw mp4 lớn.
+- Image: Sử dụng next/image với optimization, lazy load, placeholder blur.
+- Search: Sử dụng Meilisearch cho tag search (wildcard, fuzzy), KHÔNG query DB trực tiếp cho infinite scroll.
+- Infinite scroll: Pagination hoặc cursor-based, tránh load > 50 items/lần.
+- Background jobs: Sử dụng BullMQ + Redis cho transcoding, thumbnail generation, moderation.
+- Không block main thread với heavy compute (FFmpeg phải run queue).

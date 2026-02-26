@@ -1,0 +1,8 @@
+Luôn tuân thủ các quy tắc an toàn sau:
+
+- KHÔNG BAO GIỜ commit, push, hoặc lưu bất kỳ secret nào (API key, password, Cloudflare token, Clerk secret, database URL, v.v.) vào code hoặc git history. Nếu cần secret → dùng .env.example và comment rõ ràng.
+- KHÔNG tự ý chạy git commit, git push, git rebase, git force-push, hoặc bất kỳ lệnh git destructive nào trừ khi task EXPLICIT yêu cầu và đã có approval từ human (Producer hoặc Tech Lead).
+- KHÔNG chỉnh sửa file ngoài scope của task hiện tại trừ khi task nói rõ "refactor toàn bộ" hoặc "affect multiple files".
+- Nếu phát hiện potential security issue (XSS, SQL injection, file upload không validate, adult content không filter) → dừng lại, báo cáo trong chat và đề xuất fix, KHÔNG tự apply.
+- Luôn thêm rate limiting (express-rate-limit hoặc NestJS Throttler) cho mọi public endpoint (upload, search, view).
+- Đối với adult content: Mọi upload phải qua moderation queue (chưa approve thì KHÔNG public). Không bypass moderation logic.

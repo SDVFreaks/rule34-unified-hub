@@ -1,0 +1,8 @@
+Xử lý nội dung người lớn cẩn thận:
+
+- Tất cả media (image/video) phải có trường rating: 'safe' | 'questionable' | 'explicit' (theo Danbooru style).
+- Không cho phép upload hoặc hiển thị nội dung real people, CP, gore, non-consensual → nếu detect (dù chỉ nghi ngờ) → reject ngay và log report.
+- Upload pipeline: Validate file type (jpg/png/webp/gif/mp4/webm), size limit (ảnh < 10MB, video < 500MB ở MVP), scan virus nếu có tool.
+- Viewer page: Mandatory age-gate + blur/click-to-reveal cho explicit content.
+- Tag system: Không cho phép tag nhạy cảm public mà không có moderator approve (ví dụ: loli, shota → flag auto).
+- Không tự ý generate hoặc fake content (AI-generated phải có tag riêng 'ai-generated' nếu hỗ trợ).

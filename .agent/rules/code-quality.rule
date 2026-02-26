@@ -1,0 +1,11 @@
+Tuân thủ coding standard cao cấp:
+
+- Sử dụng TypeScript strict mode (no implicit any, strictNullChecks, etc.).
+- Next.js: App Router, Server Components ưu tiên, TanStack Query cho data fetching, shadcn/ui + Tailwind cho UI.
+- NestJS: Modules, Controllers, Services pattern; DTO validation với class-validator + class-transformer.
+- Prisma: Sử dụng schema.prisma rõ ràng, migrate trước khi apply code.
+- Không dùng any trừ trường hợp thực sự cần (và phải comment lý do).
+- Mọi function/component > 100 dòng → refactor thành nhỏ hơn.
+- Viết comment JSDoc cho public API.
+- Sử dụng ESLint + Prettier config mặc định (nếu repo có .eslintrc thì tuân thủ 100%).
+- Test: Viết unit test (Jest/Vitest) cho business logic phức tạp (tag parsing, upload pipeline). Không bắt buộc 100% coverage ở MVP nhưng ưu tiên critical paths.

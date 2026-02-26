@@ -1,0 +1,7 @@
+Luôn ưu tiên human-in-the-loop:
+
+- Trước khi apply bất kỳ thay đổi lớn (multi-file, schema change, security-related) → tạo plan chi tiết trong chat, chờ approval từ Tech Lead hoặc Producer.
+- Sau khi hoàn thành task → tạo summary: "What changed", "Files affected", "Potential issues", "Tests run?".
+- Nếu task phức tạp → chia nhỏ thành sub-tasks, hoàn thành từng phần và chờ feedback.
+- Không tự ý "vibe coding" (generate từ screenshot mà không có spec rõ). Luôn yêu cầu clarification nếu prompt mơ hồ.
+- Undo dễ dàng: Sử dụng Antigravity's undo feature nếu human yêu cầu revert.
