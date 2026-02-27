@@ -15,26 +15,28 @@ model User {
 }
 
 model Post {
-  id        String    @id @default(uuid())
-  title     String
-  content   String?
-  createdAt DateTime  @default(now())
-  userId    String
-  user      User      @relation(fields: [userId], references: [id])
-  tags      PostTag[]
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  mediaUrl    String?   // for image/video link later
+  rating      String    @default("explicit") // safe/questionable/explicit
+  createdAt   DateTime  @default(now())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  tags        PostTag[]
 }
 
 model Tag {
-  id    String    @id @default(uuid())
-  name  String    @unique
-  posts PostTag[]
+  id        String    @id @default(uuid())
+  name      String    @unique
+  posts     PostTag[]
 }
 
 model PostTag {
   postId String
-  post   Post   @relation(fields: [postId], references: [id])
   tagId  String
-  tag    Tag    @relation(fields: [tagId], references: [id])
+  post   Post @relation(fields: [postId], references: [id])
+  tag    Tag  @relation(fields: [tagId], references: [id])
 
   @@id([postId, tagId])
 }
