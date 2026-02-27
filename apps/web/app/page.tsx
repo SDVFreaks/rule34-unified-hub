@@ -1,101 +1,120 @@
-import Image, { type ImageProps } from "next/image";
-import { Button } from "@repo/ui/button";
-import styles from "./page.module.css";
+import Image from "next/image";
 
-type Props = Omit<ImageProps, "src"> & {
-  srcLight: string;
-  srcDark: string;
-};
+interface Tag {
+  tag: {
+    name: string;
+  };
+}
 
-const ThemeImage = (props: Props) => {
-  const { srcLight, srcDark, ...rest } = props;
+interface Post {
+  id: string;
+  title: string;
+  description: string | null;
+  mediaUrl: string | null;
+  rating: string;
+  tags: Tag[];
+}
+
+async function getPosts() {
+  try {
+    const res = await fetch("http://localhost:4000/posts", { cache: "no-store" });
+    if (!res.ok) throw new Error("Failed to fetch posts");
+    return res.json();
+  } catch (error) {
+    console.error("Error fetching posts:", error);
+    return { status: "error", data: [] };
+  }
+}
+
+export default async function Home() {
+  const result = await getPosts();
+  const posts: Post[] = result.data || [];
 
   return (
-    <>
-      <Image {...rest} src={srcLight} className="imgLight" />
-      <Image {...rest} src={srcDark} className="imgDark" />
-    </>
-  );
-};
-
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <ThemeImage
-          className={styles.logo}
-          srcLight="turborepo-dark.svg"
-          srcDark="turborepo-light.svg"
-          alt="Turborepo logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol>
-          <li>
-            Get started by editing <code>apps/web/app/page.tsx</code>
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
-
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new/clone?demo-description=Learn+to+implement+a+monorepo+with+a+two+Next.js+sites+that+has+installed+three+local+packages.&demo-image=%2F%2Fimages.ctfassets.net%2Fe5382hct74si%2F4K8ZISWAzJ8X1504ca0zmC%2F0b21a1c6246add355e55816278ef54bc%2FBasic.png&demo-title=Monorepo+with+Turborepo&demo-url=https%3A%2F%2Fexamples-basic-web.vercel.sh%2F&from=templates&project-name=Monorepo+with+Turborepo&repository-name=monorepo-turborepo&repository-url=https%3A%2F%2Fgithub.com%2Fvercel%2Fturborepo%2Ftree%2Fmain%2Fexamples%2Fbasic&root-directory=apps%2Fdocs&skippable-integrations=1&teamSlug=vercel&utm_source=create-turbo"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://turborepo.dev/docs?utm_source"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
+    <div className="min-h-screen bg-[#0a0a0c] text-white font-sans selection:bg-purple-500/30">
+      {/* Hero Section */}
+      <header className="relative py-20 px-6 overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[300px] bg-purple-600/20 blur-[120px] rounded-full -z-10" />
+        <div className="max-w-7xl mx-auto text-center">
+          <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
+            R34 Unified Hub
+          </h1>
+          <p className="text-gray-400 text-xl max-w-2xl mx-auto leading-relaxed">
+            A high-performance, unified platform for adult content discovery and management.
+            Built with Next.js, NestJS, and Prisma.
+          </p>
         </div>
-        <Button appName="web" className={styles.secondary}>
-          Open alert
-        </Button>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-6 pb-20">
+        <div className="flex items-center justify-between mb-12">
+          <h2 className="text-3xl font-bold">Latest Discoveries</h2>
+          {result.status === "db-offline" && (
+            <span className="px-4 py-1.5 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-full text-sm font-medium animate-pulse">
+              Offline Mode
+            </span>
+          )}
+        </div>
+
+        {posts.length === 0 ? (
+          <div className="text-center py-40 border border-dashed border-gray-800 rounded-3xl bg-[#0d0d0f]">
+            <p className="text-gray-500 text-lg">No posts found. Start by seeding the database.</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {posts.map((post) => (
+              <div
+                key={post.id}
+                className="group relative bg-[#121215] border border-gray-800 rounded-3xl overflow-hidden hover:border-purple-500/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-20px_rgba(168,85,247,0.3)]"
+              >
+                {/* Image Placeholder */}
+                <div className="aspect-[4/3] relative overflow-hidden bg-gray-900">
+                  {post.mediaUrl ? (
+                    <img
+                      src={post.mediaUrl}
+                      alt={post.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center text-gray-700">
+                      No Preview
+                    </div>
+                  )}
+                  {/* Rating Badge */}
+                  <div className="absolute top-4 right-4 px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/10">
+                    {post.rating}
+                  </div>
+                </div>
+
+                {/* Content */}
+                <div className="p-6">
+                  <h3 className="text-xl font-bold mb-2 group-hover:text-purple-400 transition-colors">{post.title}</h3>
+                  <p className="text-gray-400 text-sm line-clamp-2 mb-6">
+                    {post.description || "No description provided."}
+                  </p>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-2">
+                    {post.tags?.map((t, idx) => (
+                      <span
+                        key={idx}
+                        className="text-[11px] font-medium text-gray-500 bg-gray-800/40 px-3 py-1 rounded-lg border border-gray-700/50"
+                      >
+                        #{t.tag?.name || "unknown"}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com/templates?search=turborepo&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://turborepo.dev?utm_source=create-turbo"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to turborepo.dev →
-        </a>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-900 py-12 px-6 text-center text-gray-600 text-sm">
+        <p>&copy; 2026 R34 Unified Hub. Built with excellence.</p>
       </footer>
     </div>
   );

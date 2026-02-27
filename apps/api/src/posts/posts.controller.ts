@@ -8,16 +8,24 @@ export class PostsController {
     @Get()
     async getPosts() {
         try {
-            // Returning a dummy response or attempting connection
-            const count = await this.prisma.post.count();
-            return { status: 'success', message: `Found ${count} posts in DB.` };
+            const posts = await this.prisma.post.findMany({
+                include: {
+                    tags: {
+                        include: {
+                            tag: true
+                        }
+                    },
+                    user: true
+                }
+            });
+            return { status: 'success', data: posts };
         } catch (e) {
             return {
                 status: 'db-offline',
                 message: 'Returning dummy posts since database connection failed (migration needed/postgres not running).',
                 data: [
-                    { id: '1', title: 'Example Image Post', rating: 'safe', mediaUrl: 'https://example.com/image.jpg' },
-                    { id: '2', title: 'Test Video Post', rating: 'questionable', mediaUrl: 'https://example.com/video.mp4' }
+                    { id: '1', title: 'Example Image Post', rating: 'safe', mediaUrl: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81' },
+                    { id: '2', title: 'Test Video Post', rating: 'questionable', mediaUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f' }
                 ]
             };
         }
