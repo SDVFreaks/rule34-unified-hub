@@ -9,4 +9,4 @@ import { PostsController } from './posts/posts.controller';
   controllers: [AppController, PostsController],
   providers: [AppService, PrismaService],
 })
-export class AppModule { }
+export class AppModule {}

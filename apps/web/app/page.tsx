@@ -15,9 +15,11 @@ interface Post {
   tags: Tag[];
 }
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
+
 async function getPosts() {
   try {
-    const res = await fetch("http://localhost:4000/posts", { cache: "no-store" });
+    const res = await fetch(`${API_URL}/posts`, { cache: "no-store" });
     if (!res.ok) throw new Error("Failed to fetch posts");
     return res.json();
   } catch (error) {
@@ -69,12 +71,17 @@ export default async function Home() {
                 className="group relative bg-[#121215] border border-gray-800 rounded-3xl overflow-hidden hover:border-purple-500/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-20px_rgba(168,85,247,0.3)]"
               >
                 {/* Image Placeholder */}
-                <div className="aspect-[4/3] relative overflow-hidden bg-gray-900">
+                <div
+                  className="aspect-[4/3] bg-gray-900"
+                  style={{ position: 'relative', overflow: 'hidden' }}
+                >
                   {post.mediaUrl ? (
-                    <img
+                    <Image
                       src={post.mediaUrl}
                       alt={post.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-700"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   ) : (
                     <div className="absolute inset-0 flex items-center justify-center text-gray-700">
@@ -82,7 +89,7 @@ export default async function Home() {
                     </div>
                   )}
                   {/* Rating Badge */}
-                  <div className="absolute top-4 right-4 px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/10">
+                  <div className="absolute top-4 right-4 px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/10 z-10">
                     {post.rating}
                   </div>
                 </div>
@@ -109,8 +116,9 @@ export default async function Home() {
               </div>
             ))}
           </div>
-        )}
+        )/* End of posts condition */}
       </main>
+
 
       {/* Footer */}
       <footer className="border-t border-gray-900 py-12 px-6 text-center text-gray-600 text-sm">
