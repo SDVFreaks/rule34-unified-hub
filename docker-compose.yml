@@ -6,7 +6,7 @@ services:
       - "5432:5432"
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_PASSWORD: "r34_secure_2026_pass_!@#"
       POSTGRES_DB: r34db
     volumes:
       - postgres_data:/var/lib/postgresql/data

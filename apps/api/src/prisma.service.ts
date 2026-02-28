@@ -4,12 +4,15 @@ import { PrismaClient } from '@repo/db';
 @Injectable()
 export class PrismaService
   extends PrismaClient
-  implements OnModuleInit, OnModuleDestroy
-{
+  implements OnModuleInit, OnModuleDestroy {
+  public isOffline = false;
+
   async onModuleInit() {
     try {
       await this.$connect();
-    } catch {
+      this.isOffline = false;
+    } catch (error) {
+      this.isOffline = true;
       console.warn(
         'Database connection failed. Running in offline/dummy mode.',
       );

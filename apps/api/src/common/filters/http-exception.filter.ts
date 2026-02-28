@@ -29,7 +29,26 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           : JSON.stringify(res);
     } else if (exception instanceof Error) {
       message = exception.message;
-      // Special handling for Prisma errors could be added here
+      // Special handling for Prisma connection errors
+      if (
+        message.includes("Can't reach database server") ||
+        message.includes('PrismaClientInitializationError') ||
+        message.includes('ECONNREFUSED')
+      ) {
+        if (request.url.includes('/posts')) {
+          const { dummyPosts } = require('../../common/constants/dummy-data');
+          return response.status(200).json({
+            status: 'db-offline',
+            message: 'Database is unreachable. Showing dummy data.',
+            data: dummyPosts,
+          });
+        }
+
+        return response.status(503).json({
+          status: 'db-offline',
+          message: 'Database connection failed.',
+        });
+      }
     }
 
     this.logger.error(
