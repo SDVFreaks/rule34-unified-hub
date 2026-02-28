@@ -40,7 +40,7 @@ export class GlobalExceptionFilter implements ExceptionFilter {
           return response.status(200).json({
             status: 'db-offline',
             message: 'Database is unreachable. Showing dummy data.',
-            data: dummyPosts,
+            data: { posts: dummyPosts, total: dummyPosts.length },
           });
         }
 

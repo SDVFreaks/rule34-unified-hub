@@ -1,128 +1,177 @@
-import Image from "next/image";
+"use client";
 
-interface Tag {
-  tag: {
-    name: string;
-  };
-}
-
-interface Post {
-  id: string;
-  title: string;
-  description: string | null;
-  mediaUrl: string | null;
-  rating: string;
-  tags: Tag[];
-}
+import { useState, useEffect, useCallback, useMemo } from "react";
+import Masonry from "react-masonry-css";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { Header } from "@/components/Header";
+import { Sidebar } from "@/components/Sidebar";
+import { PostCard, type Post } from "@/components/PostCard";
+import { cn } from "@/lib/utils";
+import { AlertTriangle, Loader2, Database } from "lucide-react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000";
 
-async function getPosts() {
-  try {
-    const res = await fetch(`${API_URL}/posts`, { cache: "no-store" });
-    if (!res.ok) throw new Error("Failed to fetch posts");
-    return res.json();
-  } catch (error) {
-    console.error("Error fetching posts:", error);
-    return { status: "error", data: [] };
-  }
-}
+const breakpointColumnsObj = {
+  default: 4,
+  1280: 3,
+  1024: 3,
+  768: 2,
+  640: 1
+};
 
-export default async function Home() {
-  const result = await getPosts();
-  const posts: Post[] = result.data || [];
+export default function Home() {
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [status, setStatus] = useState<'loading' | 'success' | 'db-offline' | 'error'>('loading');
+  const [searchParams, setSearchParams] = useState({
+    search: "",
+    tags: "",
+    rating: ["safe", "questionable", "explicit"]
+  });
+
+  const fetchPosts = useCallback(async (pageNum: number, isInitial: boolean = false) => {
+    try {
+      const ratingStr = searchParams.rating.join(",");
+      const query = new URLSearchParams({
+        page: pageNum.toString(),
+        limit: "30",
+        search: searchParams.search,
+        tags: searchParams.tags,
+        rating: ratingStr
+      });
+
+      const res = await fetch(`${API_URL}/posts?${query.toString()}`);
+      if (!res.ok) throw new Error("Failed to fetch posts");
+
+      const result = await res.json();
+      const newPosts = result.data?.posts || [];
+      const total = result.data?.total || 0;
+
+      setStatus(result.status === 'db-offline' ? 'db-offline' : 'success');
+
+      if (isInitial) {
+        setPosts(newPosts);
+        setHasMore(newPosts.length < total);
+      } else {
+        setPosts(prev => [...prev, ...newPosts]);
+        setHasMore(posts.length + newPosts.length < total);
+      }
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+      setStatus('error');
+    }
+  }, [searchParams, posts.length]);
+
+  useEffect(() => {
+    setPage(1);
+    fetchPosts(1, true);
+  }, [searchParams]);
+
+  const handleLoadMore = () => {
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchPosts(nextPage);
+  };
+
+  const handleSearch = (search: string, tags: string, rating: string[]) => {
+    setSearchParams({ search, tags, rating });
+  };
+
+  const handleTagClick = (tagName: string) => {
+    setSearchParams(prev => {
+      const newTags = prev.tags.includes(tagName) ? prev.tags : `${prev.tags} ${tagName}`.trim();
+      return { ...prev, tags: newTags };
+    });
+  };
+
+  // Skeletons while initial loading
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen bg-[#0a0a0c] text-white font-sans">
+        <Header onSearch={handleSearch} />
+        <main className="max-w-7xl mx-auto px-6 py-12 flex gap-8">
+          <Sidebar />
+          <div className="flex-grow grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="h-64 bg-gray-900/50 rounded-xl border border-gray-800 animate-pulse" />
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#0a0a0c] text-white font-sans selection:bg-purple-500/30">
-      {/* Hero Section */}
-      <header className="relative py-20 px-6 overflow-hidden">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[300px] bg-purple-600/20 blur-[120px] rounded-full -z-10" />
-        <div className="max-w-7xl mx-auto text-center">
-          <h1 className="text-6xl md:text-7xl font-extrabold tracking-tight mb-6 bg-gradient-to-r from-white to-gray-500 bg-clip-text text-transparent">
-            R34 Unified Hub
-          </h1>
-          <p className="text-gray-400 text-xl max-w-2xl mx-auto leading-relaxed">
-            A high-performance, unified platform for adult content discovery and management.
-            Built with Next.js, NestJS, and Prisma.
-          </p>
-        </div>
-      </header>
+      <Header onSearch={handleSearch} />
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-6 pb-20">
-        <div className="flex items-center justify-between mb-12">
-          <h2 className="text-3xl font-bold">Latest Discoveries</h2>
-          {result.status === "db-offline" && (
-            <span className="px-4 py-1.5 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-full text-sm font-medium animate-pulse">
-              Offline Mode
-            </span>
+      <main className="max-w-7xl mx-auto px-6 py-12 flex gap-8 relative">
+        <Sidebar onTagClick={handleTagClick} />
+
+        <div className="flex-grow min-w-0">
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-2xl font-bold flex items-center gap-3">
+                {searchParams.tags || searchParams.search ? "Search Results" : "Recent Submissions"}
+                {status === "db-offline" && (
+                  <span className="px-3 py-1 bg-yellow-500/10 border border-yellow-500/20 text-yellow-500 rounded-full text-[10px] font-bold uppercase tracking-widest animate-pulse flex items-center gap-1">
+                    <Database size={12} />
+                    Offline Mode
+                  </span>
+                )}
+              </h2>
+              <p className="text-gray-500 text-sm mt-1">
+                Showing {posts.length} results
+              </p>
+            </div>
+          </div>
+
+          {posts.length === 0 ? (
+            <div className="text-center py-40 border-2 border-dashed border-gray-900 rounded-[32px] bg-[#0d0d0f]/50 flex flex-col items-center justify-center">
+              <AlertTriangle className="text-gray-600 mb-4" size={48} />
+              <p className="text-gray-500 text-lg font-medium">No results found for your search criteria.</p>
+              <button
+                onClick={() => setSearchParams({ search: "", tags: "", rating: ["safe", "questionable", "explicit"] })}
+                className="mt-6 text-purple-400 hover:text-purple-300 underline underline-offset-4 text-sm font-bold"
+              >
+                Clear all filters
+              </button>
+            </div>
+          ) : (
+            <InfiniteScroll
+              dataLength={posts.length}
+              next={handleLoadMore}
+              hasMore={hasMore}
+              loader={
+                <div className="flex justify-center py-12">
+                  <Loader2 className="text-purple-500 animate-spin" size={32} />
+                </div>
+              }
+              endMessage={
+                <p className="text-center py-12 text-gray-700 text-sm font-bold uppercase tracking-[0.2em]">
+                  End of the Hub
+                </p>
+              }
+              scrollThreshold={0.9}
+            >
+              <Masonry
+                breakpointCols={breakpointColumnsObj}
+                className="flex gap-6 w-auto"
+                columnClassName="bg-clip-padding"
+              >
+                {posts.map((post) => (
+                  <PostCard key={post.id} post={post} />
+                ))}
+              </Masonry>
+            </InfiniteScroll>
           )}
         </div>
-
-        {posts.length === 0 ? (
-          <div className="text-center py-40 border border-dashed border-gray-800 rounded-3xl bg-[#0d0d0f]">
-            <p className="text-gray-500 text-lg">No posts found. Start by seeding the database.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {posts.map((post) => (
-              <div
-                key={post.id}
-                className="group relative bg-[#121215] border border-gray-800 rounded-3xl overflow-hidden hover:border-purple-500/50 transition-all duration-500 hover:-translate-y-2 hover:shadow-[0_20px_40px_-20px_rgba(168,85,247,0.3)]"
-              >
-                {/* Image Placeholder */}
-                <div
-                  className="aspect-[4/3] bg-gray-900"
-                  style={{ position: 'relative', overflow: 'hidden' }}
-                >
-                  {post.mediaUrl ? (
-                    <Image
-                      src={post.mediaUrl}
-                      alt={post.title}
-                      fill
-                      className="object-cover group-hover:scale-110 transition-transform duration-700"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-gray-700">
-                      No Preview
-                    </div>
-                  )}
-                  {/* Rating Badge */}
-                  <div className="absolute top-4 right-4 px-3 py-1 bg-black/60 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-widest border border-white/10 z-10">
-                    {post.rating}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6">
-                  <h3 className="text-xl font-bold mb-2 group-hover:text-purple-400 transition-colors">{post.title}</h3>
-                  <p className="text-gray-400 text-sm line-clamp-2 mb-6">
-                    {post.description || "No description provided."}
-                  </p>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2">
-                    {post.tags?.map((t, idx) => (
-                      <span
-                        key={idx}
-                        className="text-[11px] font-medium text-gray-500 bg-gray-800/40 px-3 py-1 rounded-lg border border-gray-700/50"
-                      >
-                        #{t.tag?.name || "unknown"}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )/* End of posts condition */}
       </main>
 
-
       {/* Footer */}
-      <footer className="border-t border-gray-900 py-12 px-6 text-center text-gray-600 text-sm">
-        <p>&copy; 2026 R34 Unified Hub. Built with excellence.</p>
+      <footer className="border-t border-gray-900 py-12 px-6 text-center text-gray-700 text-xs font-bold uppercase tracking-[0.3em]">
+        <p>&copy; 2026 R34 Unified Hub. Excellence in discovery.</p>
       </footer>
     </div>
   );

@@ -51,3 +51,18 @@ a {
     display: unset;
   }
 }
+
+/* Masonry Grid */
+.my-masonry-grid {
+  display: flex;
+  width: auto;
+}
+
+.my-masonry-grid_column {
+  background-clip: padding-box;
+}
+
+/* Style your items */
+.my-masonry-grid_column>div {
+  margin-bottom: 24px;
+}

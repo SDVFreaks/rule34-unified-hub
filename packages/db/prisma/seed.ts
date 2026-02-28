@@ -15,42 +15,98 @@ async function main() {
     });
 
     // Create some tags
-    const tag1 = await prisma.tag.upsert({ where: { name: 'art' }, update: {}, create: { name: 'art' } });
-    const tag2 = await prisma.tag.upsert({ where: { name: 'sketch' }, update: {}, create: { name: 'sketch' } });
-    const tag3 = await prisma.tag.upsert({ where: { name: 'cyberpunk' }, update: {}, create: { name: 'cyberpunk' } });
+    const tagNames = [
+        'art', 'sketch', 'cyberpunk', 'illustration',
+        'character', 'digital', 'original', 'monochrome',
+        'portrait', 'background', 'nature', 'urban'
+    ];
 
-    // Create some posts
-    await prisma.post.create({
-        data: {
-            title: 'Neon Night at the Hub',
-            description: 'A futuristic cyberpunk sketch.',
+    const tags = await Promise.all(
+        tagNames.map(name =>
+            prisma.tag.upsert({
+                where: { name },
+                update: {},
+                create: { name }
+            })
+        )
+    );
+
+    const findTag = (name: string) => tags.find(t => t.name === name)!.id;
+
+    // Create more posts
+    const postData = [
+        {
+            title: 'Cyber City 77',
+            description: 'Vibrant neon streets.',
             mediaUrl: 'https://images.unsplash.com/photo-1605810230434-7631ac76ec81',
             rating: 'safe',
-            userId: user1.id,
-            tags: {
-                create: [
-                    { tagId: tag1.id },
-                    { tagId: tag3.id }
-                ]
-            }
-        }
-    });
-
-    await prisma.post.create({
-        data: {
-            title: 'Traditional Ink Work',
-            description: 'Hand-drawn ink art.',
+            tags: ['cyberpunk', 'digital', 'urban']
+        },
+        {
+            title: 'Inked Spirit',
+            description: 'Detailed ink portrait.',
             mediaUrl: 'https://images.unsplash.com/photo-1513364776144-60967b0f800f',
             rating: 'safe',
-            userId: user1.id,
-            tags: {
-                create: [
-                    { tagId: tag1.id },
-                    { tagId: tag2.id }
-                ]
-            }
+            tags: ['art', 'sketch', 'monochrome']
+        },
+        {
+            title: 'Forest Guardian',
+            description: 'An ancient spirit in the woods.',
+            mediaUrl: 'https://images.unsplash.com/photo-1511497584788-876760111969',
+            rating: 'questionable',
+            tags: ['nature', 'character', 'illustration']
+        },
+        {
+            title: 'Sunset Peaks',
+            description: 'High altitude landscape.',
+            mediaUrl: 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b',
+            rating: 'safe',
+            tags: ['nature', 'background', 'original']
+        },
+        {
+            title: 'Midnight Arcade',
+            description: 'Forgotten retro gaming hub.',
+            mediaUrl: 'https://images.unsplash.com/photo-1511512578047-dfb367046420',
+            rating: 'explicit',
+            tags: ['cyberpunk', 'urban', 'background']
+        },
+        {
+            title: 'Golden Hour Muse',
+            description: 'Stunning portrait in light.',
+            mediaUrl: 'https://images.unsplash.com/photo-1509248961158-e54f6934749c',
+            rating: 'safe',
+            tags: ['portrait', 'original', 'illustration']
+        },
+        {
+            title: 'Abstract Flow',
+            description: 'Flowing colors and shapes.',
+            mediaUrl: 'https://images.unsplash.com/photo-1541701494587-cb58502866ab',
+            rating: 'questionable',
+            tags: ['art', 'digital', 'original']
+        },
+        {
+            title: 'Neon Samurai',
+            description: 'Honor in the dark streets.',
+            mediaUrl: 'https://images.unsplash.com/photo-1534447677768-be436bb09401',
+            rating: 'explicit',
+            tags: ['cyberpunk', 'character', 'digital']
         }
-    });
+    ];
+
+    for (const post of postData) {
+        await prisma.post.create({
+            data: {
+                title: post.title,
+                description: post.description,
+                mediaUrl: post.mediaUrl,
+                rating: post.rating as any,
+                userId: user1.id,
+                tags: {
+                    create: post.tags.map(tagName => ({ tagId: findTag(tagName) }))
+                }
+            }
+        });
+    }
 
     console.log('Seeding finished.');
 }
